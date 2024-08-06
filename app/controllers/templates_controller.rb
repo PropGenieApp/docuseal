@@ -4,6 +4,7 @@ class TemplatesController < ApplicationController
   load_and_authorize_resource :template
 
   before_action :load_base_template, only: %i[new create]
+  before_action :extract_token, only: %i[show new edit create]
 
   def show
     submissions = @template.submissions.accessible_by(current_ability)
@@ -18,7 +19,16 @@ class TemplatesController < ApplicationController
     @pagy, @submissions = pagy(submissions.preload(:submitters).order(id: :desc))
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path
+
+    # Проверяем и выводим токен
+    if @token.present?
+    flash[:notice] = "Token received: #{@token}"
+    end
   end
+
+   def extract_token
+      @token = params[:token]
+    end
 
   def new
     @template.name = "#{@base_template.name} (Clone)" if @base_template

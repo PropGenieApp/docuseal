@@ -84,17 +84,6 @@
         </span>
       </a>
     </div>
-    <div
-      v-if="attribution"
-      class="text-center mt-4"
-    >
-      {{ t('signed_with') }}
-      <a
-        href="https://www.docuseal.co/start"
-        target="_blank"
-        class="underline"
-      >DocuSeal</a> - {{ t('open_source_documents_software') }}
-    </div>
   </div>
 </template>
 
