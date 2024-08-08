@@ -3,8 +3,7 @@
 class TemplatesController < ApplicationController
 
 
-  before_action :check_credentials, only: %i[edit show new create]  # Проверка логина и пароля
-  before_action :extract_token, only: %i[show new edit create]
+ before_action :check_credentials_with_auth_controller, only: %i[edit show new create]
 
   load_and_authorize_resource :template
   before_action :load_base_template, only: %i[new create]
@@ -109,6 +108,13 @@ class TemplatesController < ApplicationController
   end
 
   private
+
+  def check_credentials_with_auth_controller
+      auth_controller = AuthController.new
+      auth_controller.request = request
+      auth_controller.response = response
+      auth_controller.check_credentials
+    end
 
   def template_params
     params.require(:template).permit(

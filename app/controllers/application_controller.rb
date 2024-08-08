@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
 
   before_action :sign_in_for_demo, if: -> { Docuseal.demo? }
   before_action :maybe_redirect_to_setup, unless: :signed_in?
-  before_action :authenticate_user!, unless: :devise_controller?
+  before_action :authenticate_user!, unless: :devise_controller_or_auth_controller?
 
   helper_method :button_title,
                 :current_account,
@@ -50,6 +50,10 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  def devise_controller_or_auth_controller?
+      devise_controller? || params[:controller] == 'auth'
+  end
 
   def with_browser_locale(&)
     locale   = params[:lang].presence
