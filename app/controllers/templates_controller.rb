@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
 class TemplatesController < ApplicationController
-  load_and_authorize_resource :template
 
-  before_action :load_base_template, only: %i[new create]
+
+  before_action :check_credentials, only: %i[edit show new create]  # Проверка логина и пароля
   before_action :extract_token, only: %i[show new edit create]
+
+  load_and_authorize_resource :template
+  before_action :load_base_template, only: %i[new create]
+
 
   def show
     submissions = @template.submissions.accessible_by(current_ability)
@@ -20,15 +24,12 @@ class TemplatesController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path
 
-    # Проверяем и выводим токен
-    if @token.present?
-    flash[:notice] = "Token received: #{@token}"
-    end
   end
 
-   def extract_token
+  def extract_token
       @token = params[:token]
-    end
+      Rails.logger.info("Token received: #{@token}") if @token.present?
+  end
 
   def new
     @template.name = "#{@base_template.name} (Clone)" if @base_template
@@ -136,6 +137,30 @@ class TemplatesController < ApplicationController
       redirect_back(fallback_location: root_path, notice: 'Template has been clonned')
     end
   end
+
+    def check_credentials
+      email = params[:email]
+      password = params[:password]
+
+      Rails.logger.info("email received: #{email}") if email.present?
+      Rails.logger.info("password received: #{password}") if password.present?
+
+      if email.present? && password.present?
+        user = User.find_by(email: email.downcase)
+
+        if user&.valid_password?(password)
+          sign_in(user)
+          # Выполнен вход, добавьте нужные действия здесь, если требуется
+          render json: { message: 'Successfully signed in', user: user }, status: :ok
+        else
+          render json: { error: 'Invalid email or password' }, status: :unauthorized
+        end
+      else
+        render json: { error: 'Email and password must be provided' }, status: :bad_request
+      end
+    end
+
+
 
   def load_base_template
     return if params[:base_template_id].blank?
